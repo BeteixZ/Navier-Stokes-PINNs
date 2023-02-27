@@ -20,19 +20,13 @@ def dataGen(numIn, numOut, numCL, numOB, lowB, uppB, cyldCoord, cyldRadius, rand
 
     setSeed(randSeed)
 
-    # Collocation (x,y,t)
-    colPts = lowB + uppB * lhs(3, numCL)
-    refinedColPts = lowB + [cyldCoord[0], uppB[1], uppB[2]] * lhs(3, int(numCL / 5))
-    colPts = np.concatenate((colPts, refinedColPts), 0)
-    colPts = obstacleDel(colPts, cyldCoord, cyldRadius)
-
     # INLET (x,y,t,u,v)
     maxU = 0.5
     T = 1
     inletPts = lowB + [0., uppB[1], uppB[2]] * lhs(3, numIn)
     # inletU = 4 * maxU * inletPts[:, 0] * (uppB[1] - inletPts[:, 1])
     inletU = 4 * maxU * inletPts[:, 1] * (0.41 - inletPts[:, 1]) / (0.41 ** 2) * (
-                np.sin(2 * 3.1416 * inletPts[:, 2] / T + 3 * 3.1415927 / 2) + 1.0)
+            np.sin(2 * 3.1416 * inletPts[:, 2] / T + 3 * 3.1415927 / 2) + 1.0)
     inletV = np.zeros_like(inletU)
     inletPts = np.vstack((inletPts[:, 0], inletPts[:, 1], inletPts[:, 2], inletU, inletV)).T  # some annoying stacking
 
@@ -48,6 +42,13 @@ def dataGen(numIn, numOut, numCL, numOB, lowB, uppB, cyldCoord, cyldRadius, rand
     cyldY = np.multiply(cyldRadius, np.sin(cyldTheta)) + cyldCoord[1]
     cyldPts = np.vstack((cyldX, cyldY, cyldT)).T  # another one
     obstaclePts = np.concatenate((lowerWall, upperWall, cyldPts), 0)
+
+    # Collocation (x,y,t)
+    colPts = lowB + uppB * lhs(3, numCL)
+    refinedColPts = lowB + [cyldCoord[0], uppB[1], uppB[2]] * lhs(3, int(numCL / 5))
+    colPts = np.concatenate((colPts, refinedColPts), 0)
+    colPts = obstacleDel(colPts, cyldCoord, cyldRadius)
+    # colPts = np.concatenate((colPts, obstaclePts, inletPts[:, 0:3], outPts), 0)
 
     return [colPts, inletPts, outPts, obstaclePts]
 
