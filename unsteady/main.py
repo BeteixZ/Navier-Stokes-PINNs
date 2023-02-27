@@ -4,17 +4,17 @@ from functional import setSeed
 from unsteady.model import NSModel
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--layer', help='number of layers', type=int, default=8)
-parser.add_argument('--neurons', help='number of neurons per layer', type=int, default=40)
-parser.add_argument('--numIn', help='number of init points pper layer', type=int, default=1000)
-parser.add_argument('--numOut', help='number of boundary points', type=int, default=1000)
-parser.add_argument('--numCL', help='number of collocation points', type=int, default=30000)
-parser.add_argument('--numOB', help='number of obstacle points', type=int, default=1000)
+parser.add_argument('--layer', help='number of layers', type=int, default=7)
+parser.add_argument('--neurons', help='number of neurons per layer', type=int, default=50)
+parser.add_argument('--numIn', help='number of init points pper layer', type=int, default=4000)
+parser.add_argument('--numOut', help='number of boundary points', type=int, default=4000)
+parser.add_argument('--numCL', help='number of collocation points', type=int, default=50000)
+parser.add_argument('--numOB', help='number of obstacle points', type=int, default=4000)
 parser.add_argument('--AEpoch', help='Number of ADAM epochs', type=int, default=5000)
 parser.add_argument('--LEpoch', help='Number of LBFGS epochs', type=int, default=5000)
 parser.add_argument('--act', help='Activation function', type=str, default='tanh')
 parser.add_argument('--save', help='save model', type=bool, default=False)
-parser.add_argument('--record', help='Make Tensorboard record', type=bool, default=False)
+parser.add_argument('--record', help='Make Tensorboard record', type=bool, default=True)
 parser.add_argument('--seed', help='Random seed', type=int, default=42)
 
 
