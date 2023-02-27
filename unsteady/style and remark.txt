@@ -1,0 +1,1 @@
+1. Use camel style for variables and functions.
