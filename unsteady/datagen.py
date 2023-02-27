@@ -20,12 +20,6 @@ def dataGen(numIn, numOut, numCL, numOB, lowB, uppB, cyldCoord, cyldRadius, rand
 
     setSeed(randSeed)
 
-    # Collocation (x,y,t)
-    colPts = lowB + uppB * lhs(3, numCL)
-    refinedColPts = lowB + [cyldCoord[0], uppB[1], uppB[2]] * lhs(3, int(numCL / 5))
-    colPts = np.concatenate((colPts, refinedColPts), 0)
-    colPts = obstacleDel(colPts, cyldCoord, cyldRadius)
-
     # INLET (x,y,t,u,v)
     maxU = 0.5
     T = 1
@@ -48,6 +42,13 @@ def dataGen(numIn, numOut, numCL, numOB, lowB, uppB, cyldCoord, cyldRadius, rand
     cyldY = np.multiply(cyldRadius, np.sin(cyldTheta)) + cyldCoord[1]
     cyldPts = np.vstack((cyldX, cyldY, cyldT)).T  # another one
     obstaclePts = np.concatenate((lowerWall, upperWall, cyldPts), 0)
+
+    # Collocation (x,y,t)
+    colPts = lowB + uppB * lhs(3, numCL)
+    refinedColPts = lowB + [cyldCoord[0], uppB[1], uppB[2]] * lhs(3, int(numCL / 5))
+    colPts = np.concatenate((colPts, refinedColPts), 0)
+    colPts = obstacleDel(colPts, cyldCoord, cyldRadius)
+    colPts = np.concatenate((colPts, obstaclePts, inletPts[:,0:3], outPts), 0)
 
     return [colPts, inletPts, outPts, obstaclePts]
 
