@@ -261,7 +261,7 @@ class NSModel:
         os.makedirs('./output')
         for i in range(N_t):
             tStar = np.zeros((xStar.size, 1))
-            tStar.fill(i * 0.5 / (N_t - 1))
+            tStar.fill(i * self.uppB[2] / (N_t - 1))
 
             tStarT = Variable(torch.from_numpy(tStar.astype(np.float32)), requires_grad=False).to(self.device)
 
