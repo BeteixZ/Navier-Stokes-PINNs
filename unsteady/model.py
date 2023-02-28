@@ -132,8 +132,6 @@ class NSModel:
         v_y = derivative(v, colY)
         v_t = derivative(v, colT)
 
-
-
         # f_u = Sxx_x + Sxy_y
         f_u = self.rho * (u * u_x + v * u_y + u_t) - s11_x - s12_y
         f_v = self.rho * (u * v_x + v * v_y + v_t) - s12_x - s22_y
