@@ -35,8 +35,8 @@ def main():
 
     pts = dataGen(args.numIn, args.numOut, args.numCL, args.numOB, lowerBound, upperBound, cyldCoord, cyldRadius, 42)
     model = NSModel(pts, bound, nnPara, iterPara, args.save, args.record, args.seed)
-    model.loadFCModel("./models/model.pt")
-    # model.train()
+    # model.loadFCModel("./models/model.pt")
+    model.train()
     model.inference()
 
 
