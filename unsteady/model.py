@@ -182,7 +182,7 @@ class NSModel:
 
         if self.record:
             self.writer.add_scalar('Loss', loss.detach().cpu().numpy(), self.__nowIter)
-            self.writer.add_scalars('MSE', {'MSE_f': mseCl.detach().cpu().numpy(),
+            self.writer.add_scalar('MSE', {'MSE_f': mseCl.detach().cpu().numpy(),
                                            'MSE_in': mseIn.detach().cpu().numpy(),
                                            'MSE_out': mseOut.detach().cpu().numpy(),
                                            'MSE_obstacle': mseObs.detach().cpu().numpy()}, self.__nowIter)
