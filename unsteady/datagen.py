@@ -25,7 +25,7 @@ def dataGen(numIn, numOut, numCL, numOB, lowB, uppB, cyldCoord, cyldRadius, rand
     maxU = 1.5
     T = 1
     inletPts = lowB + [0., uppB[1], uppB[2]] * lhs(3, numIn)
-    inletU = 4 * maxU * inletPts[:, 1] * (uppB[1] - inletPts[:, 1])
+    inletU = 4 * maxU * inletPts[:, 1] * (uppB[1] - inletPts[:, 1]) / uppB[1] ** 2
     # inletU = 4 * maxU * inletPts[:, 1] * (0.41 - inletPts[:, 1]) / (0.41 ** 2) * (
     #             np.sin(2 * 3.1415927 * inletPts[:, 2] / T + 3 * 3.1415927 / 2) + 1.0)
     inletV = np.zeros_like(inletU)
@@ -51,13 +51,13 @@ def dataGen(numIn, numOut, numCL, numOB, lowB, uppB, cyldCoord, cyldRadius, rand
     colPts = obstacleDel(colPts, cyldCoord, cyldRadius)
     colPts = np.concatenate((colPts, obstaclePts, inletPts[:,0:3], outPts), 0)
 
-    # fig = plt.figure()
-    # ax = fig.add_subplot(111, projection='3d')
-    # ax.scatter(inletPts[:, 1:2], inletPts[:, 2:3], inletPts[:, 3:4], marker='o', alpha=0.1, s=2, color='blue')
-    # ax.set_xlabel('y axis')
-    # ax.set_ylabel('t axis')
-    # ax.set_zlabel('v axis')
-    # plt.show()
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.scatter(inletPts[:, 1:2], inletPts[:, 2:3], inletPts[:, 3:4], marker='o', alpha=0.1, s=2, color='blue')
+    ax.set_xlabel('y axis')
+    ax.set_ylabel('t axis')
+    ax.set_zlabel('v axis')
+    plt.show()
 
     # fig = plt.figure()
     # ax = fig.add_subplot(111, projection='3d')

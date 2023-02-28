@@ -63,7 +63,7 @@ class NSModel:
         self.mseObsV = 0
 
         self.rho = 1
-        self.mu = 0.001
+        self.mu = 0.005
 
         self.iterADAM = iterPara[0]
         self.iterLBFGS = iterPara[1]
@@ -89,10 +89,10 @@ class NSModel:
     def loadFCModel(self, dir):
         self.model.load_state_dict(torch.load(dir))
 
-    def variablize(self, pts, reqGrad = [True, True, False]):
-        colX = Variable(torch.from_numpy(pts[:, 0].astype(np.float32)), requires_grad=reqGrad[0]).to(self.device)
-        colY = Variable(torch.from_numpy(pts[:, 1].astype(np.float32)), requires_grad=reqGrad[1]).to(self.device)
-        colT = Variable(torch.from_numpy(pts[:, 2].astype(np.float32)), requires_grad=reqGrad[2]).to(self.device)
+    def variablize(self, pts):
+        colX = Variable(torch.from_numpy(pts[:, 0].astype(np.float32)), requires_grad=True).to(self.device)
+        colY = Variable(torch.from_numpy(pts[:, 1].astype(np.float32)), requires_grad=True).to(self.device)
+        colT = Variable(torch.from_numpy(pts[:, 2].astype(np.float32)), requires_grad=False).to(self.device)
         return colX, colY, colT
 
     def __uvp(self, X, Y, T):
@@ -108,15 +108,15 @@ class NSModel:
 
         :return:
         '''
-        colX, colY, colT = self.variablize(self.colPts, reqGrad=[True,True,True])
+        colX, colY, colT = self.variablize(self.colPts)
         modelOut = self.model(torch.stack((colX, colY, colT), dim=1))
-        psi = modelOut[:, 0]  # [[...],[...],...]
+        psi = modelOut[:,0]  # [[...],[...],...]
         p = modelOut[:, 1]  # check if this is right TODO
         s11 = modelOut[:, 2]
         s22 = modelOut[:, 3]
         s12 = modelOut[:, 4]
-        u = derivative(psi, colY)  # and this
-        v = -derivative(psi, colX)
+        u = derivative(psi, colX)  # and this
+        v = -derivative(psi, colY)
 
         s11_x = derivative(s11, colX)
         s12_y = derivative(s12, colY)
@@ -126,15 +126,13 @@ class NSModel:
         # Plane stress problem
         u_x = derivative(u, colX)
         u_y = derivative(u, colY)
-        u_t = derivative(u, colT)
 
         v_x = derivative(v, colX)
         v_y = derivative(v, colY)
-        v_t = derivative(v, colT)
 
         # f_u = Sxx_x + Sxy_y
-        f_u = self.rho * (u * u_x + v * u_y + u_t) - s11_x - s12_y
-        f_v = self.rho * (u * v_x + v * v_y + v_t) - s12_x - s22_y
+        f_u = self.rho * (u * u_x + v * u_y) - s11_x - s12_y
+        f_v = self.rho * (u * v_x + v * v_y) - s12_x - s22_y
 
         # f_mass = u_x + v_y
         f_s11 = -p + 2 * self.mu * u_x - s11
@@ -153,12 +151,14 @@ class NSModel:
         psi = modelOut[:, 0]
         v = -derivative(psi, inletX)
         u = derivative(psi, inletY)
+        vReal = Variable(torch.from_numpy(self.inletPts[:, 4].astype(np.float32)), requires_grad=False).to(self.device)
         uReal = Variable(torch.from_numpy(self.inletPts[:, 3].astype(np.float32)), requires_grad=False).to(self.device)
-        return torch.mean((u - uReal) ** 2) + torch.mean(v ** 2)
+        return torch.mean((u - uReal) ** 2) + \
+            torch.mean((v - vReal) ** 2)
 
     def __mseOutlet(self):
         outletX, outletY, outletT = self.variablize(self.outPts)
-        return torch.mean(self.model(torch.stack((outletX, outletY, outletT), dim=1))[:, 2] ** 2)
+        return torch.mean(self.model(torch.stack((outletX, outletY, outletT), dim=1))[:, 1:2] ** 2)
 
     def __mseObstacle(self):
         obstacleX, obstacleY, obstacleT = self.variablize(self.obstaclePts)
@@ -200,7 +200,7 @@ class NSModel:
 
     def train(self):
         timeStart = time.time()
-        scheduler = StepLR(self.optimizer, step_size=1000, gamma=0.5)
+        scheduler = StepLR(self.optimizer, step_size=2000, gamma=0.5)
         print("Start training: ADAM")
         for i in range(self.iterADAM):
             self.optimizer.step(self.__closure)
@@ -233,14 +233,14 @@ class NSModel:
 
         x_frontT = Variable(torch.from_numpy(xFront.astype(np.float32)), requires_grad=True).to(self.device)
         y_frontT = Variable(torch.from_numpy(yFront.astype(np.float32)), requires_grad=True).to(self.device)
-        t_frontT = Variable(torch.from_numpy(tFront.astype(np.float32)), requires_grad=True).to(self.device)
+        t_frontT = Variable(torch.from_numpy(tFront.astype(np.float32)), requires_grad=False).to(self.device)
         self.model.eval()
 
         # p with t
-        _, _, pPred = self.__uvp(x_frontT[:, 0], y_frontT[:, 0], t_frontT[:, 0])
-        pPred = pPred.data.cpu().numpy()
-        plt.plot(tFront, pPred)
-        plt.show()
+        #_, _, pPred = self.__uvp(x_frontT[:, 0], y_frontT[:, 0], t_frontT[:, 0])
+        #pPred = pPred.data.cpu().numpy()
+        #plt.plot(tFront, pPred)
+        #plt.show()
 
         N_t = 51
         xStar = np.linspace(self.lowB[0], self.uppB[0], 401)
@@ -263,7 +263,7 @@ class NSModel:
             tStar = np.zeros((xStar.size, 1))
             tStar.fill(i * 0.5 / (N_t - 1))
 
-            tStarT = Variable(torch.from_numpy(tStar.astype(np.float32)), requires_grad=True).to(self.device)
+            tStarT = Variable(torch.from_numpy(tStar.astype(np.float32)), requires_grad=False).to(self.device)
 
             uPred, vPred, pPred = self.__uvp(xStarT[:, 0], yStarT[:, 0], tStarT[:, 0])
             uPred = uPred.data.cpu().numpy()
