@@ -64,7 +64,7 @@ class NSModel:
         self.mseObsV = 0
 
         self.rho = 1
-        self.mu = 0.001
+        self.mu = 0.005
 
         self.iterADAM = iterPara[0]
         self.iterLBFGS = iterPara[1]
@@ -234,7 +234,7 @@ class NSModel:
 
         if self.save:
             torch.save(self.model.state_dict(),
-                       './models/' + "model" + '.pt')  # TODO
+                       './models/' + "PIDLFILF-unsteay-model" + '.pt')
 
     def inference(self):  # not change too much
         # tFront = np.linspace(0, self.uppB[2], 100)

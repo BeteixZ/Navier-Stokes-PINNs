@@ -24,11 +24,11 @@ def dataGen(numIn, numOut, numCL, numOB, numIc, lowB, uppB, cyldCoord, cyldRadiu
 
     # INLET (x,y,t,u,v)
     maxU = 1.5
-    T = 1
+    T = uppB[2]*2
     inletPts = lowB + [0., uppB[1], uppB[2]] * lhs(3, numIn)
-    inletU = 4 * maxU * inletPts[:, 1] * (uppB[1] - inletPts[:, 1]) / uppB[1] ** 2
-    #inletU = 4 * maxU * inletPts[:, 1] * (0.41 - inletPts[:, 1]) / (0.41 ** 2) * (
-    #       np.sin(2 * 3.1415927 * inletPts[:, 2] / T + 3 * 3.1415927 / 2) + 1.0)
+    # inletU = 4 * maxU * inletPts[:, 1] * (uppB[1] - inletPts[:, 1]) / uppB[1] ** 2
+    inletU = 4 * maxU * inletPts[:, 1] * (0.41 - inletPts[:, 1]) / (0.41 ** 2) * (
+           np.sin(2 * 3.1415927 * inletPts[:, 2] / T + 3 * 3.1415927 / 2) + 1.0)
     inletV = np.zeros_like(inletU)
     inletPts = np.vstack((inletPts[:, 0], inletPts[:, 1], inletPts[:, 2], inletU, inletV)).T  # some annoying stacking
 

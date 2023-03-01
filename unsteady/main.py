@@ -26,7 +26,7 @@ def main():
     setSeed(args.seed)
 
     lowerBound = [0, 0, 0]
-    upperBound = [2.2, 0.41, 2]
+    upperBound = [1.1, 0.41, 0.5]
     cyldCoord = [0.2, 0.2]
     cyldRadius = 0.05
 
