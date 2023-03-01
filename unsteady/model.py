@@ -53,6 +53,7 @@ class NSModel:
         self.inletPts = pts[1]
         self.outPts = pts[2]
         self.obstaclePts = pts[3]
+        self.icPts = pts[4]
         self.lowB = bound[0]
         self.uppB = bound[1]
         self.model = FCModel(nnPara[0], nnPara[1], nnPara[2]).to(self.device)
@@ -112,8 +113,8 @@ class NSModel:
         '''
         colX, colY, colT = self.variablize(self.colPts, reqGrad=[True, True, True])
         modelOut = self.model(torch.stack((colX, colY, colT), dim=1))
-        psi = modelOut[:,0]  # [[...],[...],...]
-        p = modelOut[:, 1]  # check if this is right TODO
+        psi = modelOut[:, 0]
+        p = modelOut[:, 1]
         s11 = modelOut[:, 2]
         s22 = modelOut[:, 3]
         s12 = modelOut[:, 4]
@@ -160,7 +161,7 @@ class NSModel:
 
     def __mseOutlet(self):
         outletX, outletY, outletT = self.variablize(self.outPts)
-        return torch.mean(self.model(torch.stack((outletX, outletY, outletT), dim=1))[:, 2] ** 2)
+        return torch.mean(self.model(torch.stack((outletX, outletY, outletT), dim=1))[:, 1] ** 2)
 
     def __mseObstacle(self):
         obstacleX, obstacleY, obstacleT = self.variablize(self.obstaclePts)
@@ -170,6 +171,15 @@ class NSModel:
         u = derivative(psi, obstacleY)
         return torch.mean(u ** 2) + torch.mean(v ** 2)
 
+    def __mseIC(self):
+        icX, icY, icT = self.variablize(self.icPts)
+        modelOut = self.model(torch.stack((icX, icY, icT), dim=1))
+        psi = modelOut[:, 0]
+        u = derivative(psi, icY)
+        v = -derivative(psi, icX)
+        p = modelOut[:, 1]
+        return torch.mean(u ** 2) + torch.mean(v ** 2) + torch.mean(p ** 2)
+
     def __closure(self):
         self.avgEpochTime = time.time()
         self.__nowIter += 1
@@ -178,31 +188,34 @@ class NSModel:
         mseIn = self.__mseInlet()
         mseOut = self.__mseOutlet()
         mseObs = self.__mseObstacle()
-        loss = mseCl + 3 * mseIn + 6 * mseOut + 3 * mseObs
+        mseIC = self.__mseIC()
+        loss = mseCl + 3 * mseIn + 6 * mseOut + 3 * mseObs + 2 * mseIC
         self.__nowLoss = loss.item()
         loss.backward(retain_graph=False)
 
         if self.record:
             self.writer.add_scalar('Loss', loss.detach().cpu().numpy(), self.__nowIter)
             self.writer.add_scalars('MSE', {'MSE_f': mseCl.detach().cpu().numpy(),
-                                           'MSE_in': mseIn.detach().cpu().numpy(),
-                                           'MSE_out': mseOut.detach().cpu().numpy(),
-                                           'MSE_obstacle': mseObs.detach().cpu().numpy()}, self.__nowIter)
+                                            'MSE_in': mseIn.detach().cpu().numpy(),
+                                            'MSE_out': mseOut.detach().cpu().numpy(),
+                                            'MSE_obstacle': mseObs.detach().cpu().numpy(),
+                                            'MSE_ic': mseIC.detach().cpu().numpy()}, self.__nowIter)
 
         if self.__nowIter % 10 == 0:
-            print("Iter: {}, AvgT: {:.2f}, loss: {:.6f}, Cl: {:.6f}, In: {:.6f}, Out:{:.6f}, Obs:{:.6f}"
+            print("Iter: {}, AvgT: {:.2f}, loss: {:.6f}, Cl: {:.6f}, In: {:.6f}, Out:{:.6f}, Obs:{:.6f}, IC:{:.6f}"
                   .format(self.__nowIter,
                           time.time() - self.avgEpochTime,
                           loss.item(),
                           mseCl,
                           mseIn,
                           mseOut,
-                          mseObs))
+                          mseObs,
+                          mseIC))
         return loss
 
     def train(self):
         timeStart = time.time()
-        scheduler = StepLR(self.optimizer, step_size=2000, gamma=0.5)
+        scheduler = StepLR(self.optimizer, step_size=1000, gamma=0.5)
         print("Start training: ADAM")
         for i in range(self.iterADAM):
             self.optimizer.step(self.__closure)
@@ -224,25 +237,25 @@ class NSModel:
                        './models/' + "model" + '.pt')  # TODO
 
     def inference(self):  # not change too much
-        tFront = np.linspace(0, 0.5, 100)
-        xFront = np.zeros_like(tFront)
-        xFront.fill(0.15)
-        yFront = np.zeros_like(tFront)
-        yFront.fill(0.20)
-        tFront = tFront.flatten()[:, None]
-        xFront = xFront.flatten()[:, None]
-        yFront = yFront.flatten()[:, None]
+        # tFront = np.linspace(0, self.uppB[2], 100)
+        # xFront = np.zeros_like(tFront)
+        # xFront.fill(0.15)
+        # yFront = np.zeros_like(tFront)
+        # yFront.fill(0.20)
+        # tFront = tFront.flatten()[:, None]
+        # xFront = xFront.flatten()[:, None]
+        # yFront = yFront.flatten()[:, None]
 
-        x_frontT = Variable(torch.from_numpy(xFront.astype(np.float32)), requires_grad=True).to(self.device)
-        y_frontT = Variable(torch.from_numpy(yFront.astype(np.float32)), requires_grad=True).to(self.device)
-        t_frontT = Variable(torch.from_numpy(tFront.astype(np.float32)), requires_grad=False).to(self.device)
+        # x_frontT = Variable(torch.from_numpy(xFront.astype(np.float32)), requires_grad=True).to(self.device)
+        # y_frontT = Variable(torch.from_numpy(yFront.astype(np.float32)), requires_grad=True).to(self.device)
+        # t_frontT = Variable(torch.from_numpy(tFront.astype(np.float32)), requires_grad=False).to(self.device)
         self.model.eval()
 
         # p with t
-        #_, _, pPred = self.__uvp(x_frontT[:, 0], y_frontT[:, 0], t_frontT[:, 0])
-        #pPred = pPred.data.cpu().numpy()
-        #plt.plot(tFront, pPred)
-        #plt.show()
+        # _, _, pPred = self.__uvp(x_frontT[:, 0], y_frontT[:, 0], t_frontT[:, 0])
+        # pPred = pPred.data.cpu().numpy()
+        # plt.plot(tFront, pPred)
+        # plt.show()
 
         N_t = 51
         xStar = np.linspace(self.lowB[0], self.uppB[0], 401)
@@ -253,8 +266,8 @@ class NSModel:
         dst = ((xStar - 0.2) ** 2 + (yStar - 0.2) ** 2) ** 0.5  # consider change this: TODO
         xStar = xStar[dst >= 0.05]
         yStar = yStar[dst >= 0.05]
-        xStar = xStar.flatten()[:, None]
-        yStar = yStar.flatten()[:, None]
+        # xStar = xStar.flatten()[:, None]
+        # yStar = yStar.flatten()[:, None]
 
         xStarT = Variable(torch.from_numpy(xStar.astype(np.float32)), requires_grad=True).to(self.device)
         yStarT = Variable(torch.from_numpy(yStar.astype(np.float32)), requires_grad=True).to(self.device)
@@ -265,14 +278,13 @@ class NSModel:
             tStar = np.zeros((xStar.size, 1))
             tStar.fill(i * self.uppB[2] / (N_t - 1))
 
-            tStarT = Variable(torch.from_numpy(tStar.astype(np.float32)), requires_grad=True).to(self.device)
+            tStarT = Variable(torch.from_numpy(tStar.astype(np.float32)), requires_grad=False).to(self.device)
 
-            uPred, vPred, pPred = self.__uvp(xStarT[:, 0], yStarT[:, 0], tStarT[:, 0])
+            uPred, vPred, pPred = self.__uvp(xStarT, yStarT, tStarT[:, 0])
             uPred = uPred.data.cpu().numpy()
             vPred = vPred.data.cpu().numpy()
             pPred = pPred.data.cpu().numpy()
             field = [xStar, yStar, tStar, uPred, vPred, pPred]
-            # amp_pred = (uPred ** 2 + vPred ** 2) ** 0.5
 
             postProcess(xmin=self.lowB[0], xmax=self.uppB[0], ymin=self.lowB[1], ymax=self.uppB[1], field=field, s=2,
-                        num=i)
+                        num=i, tstep=self.uppB[2] / (N_t - 1))

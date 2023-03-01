@@ -45,7 +45,7 @@ def initWeights(m):
     pass
 
 
-def postProcess(xmin, xmax, ymin, ymax, field, s=2, num=0):
+def postProcess(xmin, xmax, ymin, ymax, field, s=2, num=0, tstep=.01):
     ''' num: Number of time step
     '''
     print(num)
@@ -86,7 +86,7 @@ def postProcess(xmin, xmax, ymin, ymax, field, s=2, num=0):
     # ax[3].set_title('amp predict')
     # fig.colorbar(cf, ax=ax[3], fraction=0.046, pad=0.04)
 
-    plt.suptitle('Time: '+str(num*0.01)+'s', fontsize=16)
+    plt.suptitle('Time: '+str(num*tstep)+'s', fontsize=16)
 
     plt.savefig('./output/'+str(num)+'.png',dpi=150)
     plt.close('all')
