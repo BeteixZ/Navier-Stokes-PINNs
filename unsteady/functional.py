@@ -52,29 +52,32 @@ def postProcess(xmin, xmax, ymin, ymax, field, s=2, num=0, tstep=.01):
     [x_pred, y_pred, _, u_pred, v_pred, p_pred] = field
 
     # fig, axs = plt.subplots(2)
-    fig, ax = plt.subplots(nrows=3, figsize=(6, 8))
+    fig, ax = plt.subplots(nrows=3, figsize=(6, 6))
     # fig.subplots_adjust(hspace=0.2, wspace=0.2)
 
-    cf = ax[0].scatter(x_pred, y_pred, c=u_pred, alpha=0.7, edgecolors='none', cmap='rainbow', marker='o', s=s, vmin=0, vmax=1.4)
+    cf = ax[0].scatter(x_pred, y_pred, c=u_pred, alpha=0.7, edgecolors='none', cmap='rainbow', marker='o', s=s, vmin=0, vmax=2.5)
     ax[0].axis('square')
     ax[0].set_xlim([xmin, xmax])
     ax[0].set_ylim([ymin, ymax])
     ax[0].set_title('u predict')
-    fig.colorbar(cf, ax=ax[0], fraction=0.046, pad=0.04)
+    cax = fig.add_axes([ax[0].get_position().x1 + 0.01, ax[0].get_position().y0, 0.02, ax[0].get_position().height])
+    fig.colorbar(cf, cax=cax)
 
-    cf = ax[1].scatter(x_pred, y_pred, c=v_pred, alpha=0.7, edgecolors='none', cmap='rainbow', marker='o', s=s, vmin= -0.7,vmax=0.7)
+    cf = ax[1].scatter(x_pred, y_pred, c=v_pred, alpha=0.7, edgecolors='none', cmap='rainbow', marker='o', s=s, vmin= -1,vmax=1)
     ax[1].axis('square')
     ax[1].set_xlim([xmin, xmax])
     ax[1].set_ylim([ymin, ymax])
     ax[1].set_title('v predict')
-    fig.colorbar(cf, ax=ax[1], fraction=0.046, pad=0.04)
+    cax = fig.add_axes([ax[1].get_position().x1 + 0.01, ax[1].get_position().y0, 0.02, ax[1].get_position().height])
+    fig.colorbar(cf, cax=cax)
 
     cf = ax[2].scatter(x_pred, y_pred, c=p_pred, alpha=0.7, edgecolors='none', cmap='rainbow', marker='o', s=s, vmin=-0.2, vmax=3)
     ax[2].axis('square')
     ax[2].set_xlim([xmin, xmax])
     ax[2].set_ylim([ymin, ymax])
     ax[2].set_title('p predict')
-    fig.colorbar(cf, ax=ax[2], fraction=0.046, pad=0.04)
+    cax = fig.add_axes([ax[2].get_position().x1 + 0.01, ax[2].get_position().y0, 0.02, ax[2].get_position().height])
+    fig.colorbar(cf, cax=cax)
 
     # cf = ax[3].scatter(x_pred, y_pred, c=amp_pred, alpha=0.7, edgecolors='none', cmap='rainbow', marker='o', s=s,
     #                    vmin=-0.2, vmax=3)
