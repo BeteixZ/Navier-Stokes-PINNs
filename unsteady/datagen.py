@@ -23,7 +23,7 @@ def dataGen(numIn, numOut, numCL, numOB, numIc, lowB, uppB, cyldCoord, cyldRadiu
     setSeed(randSeed)
 
     # INLET (x,y,t,u,v)
-    maxU = 1.5
+    maxU = 0.5
     T = uppB[2]*2
     inletPts = lowB + [0., uppB[1], uppB[2]] * lhs(3, numIn)
     # inletU = 4 * maxU * inletPts[:, 1] * (uppB[1] - inletPts[:, 1]) / uppB[1] ** 2

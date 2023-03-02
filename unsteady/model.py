@@ -215,7 +215,7 @@ class NSModel:
 
     def train(self):
         timeStart = time.time()
-        scheduler = StepLR(self.optimizer, step_size=1000, gamma=0.5)
+        scheduler = StepLR(self.optimizer, step_size=2000, gamma=0.5)
         print("Start training: ADAM")
         for i in range(self.iterADAM):
             self.optimizer.step(self.__closure)
