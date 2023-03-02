@@ -26,7 +26,7 @@ def main():
     setSeed(args.seed)
 
     lowerBound = [0, 0, 0]
-    upperBound = [1.1, 0.41, 0.5]
+    upperBound = [2.2, 0.41, 2]
     cyldCoord = [0.2, 0.2]
     cyldRadius = 0.05
 
@@ -36,8 +36,8 @@ def main():
 
     pts = dataGen(args.numIn, args.numOut, args.numCL, args.numOB, args.numIC, lowerBound, upperBound, cyldCoord, cyldRadius, 42)
     model = NSModel(pts, bound, nnPara, iterPara, args.save, args.record, args.seed)
-    # model.loadFCModel("./models/model.pt")
-    model.train()
+    model.loadFCModel("./models/model.pt")
+    #model.train()
     model.inference()
 
 
